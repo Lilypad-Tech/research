@@ -229,3 +229,32 @@ This process allows you to prove that the output of executing a command like `/u
 
 - **Security**: The external execution environment must be trusted, as the circuit cannot enforce security for the external binary's execution.
 - **Determinism**: Ensure that the output of the binary is deterministic, as ZKP circuits require consistent results for verification.
+
+### **Checksum Attack Vector**
+1. **Public Knowledge**: The expected checksum of the binary and the output hash are known publicly, therefore an adversary can trivially submit those known values as inputs to the ZKP circuit without actually executing the binary.
+
+2. **No Execution Enforcement**: The ZKP circuit itself does not enforce that the binary was executed or that the output is genuinely produced by that execution. It only verifies that the given inputs (i.e., binary checksum and output hash) match the expected values.
+
+3. **Faking Inputs**: In an untrusted environment, an attacker can bypass the actual execution of the binary. They can simply compute the known expected values and use those to generate a valid proof, thereby "faking" the process.
+
+### **Mitigating the Risk**
+To prevent this type of attack, you can consider the following strategies:
+
+#### 1. **Non-Interactive Proofs with a Trusted Setup**
+   - **Trusted Setup**: Use a trusted setup to generate a secret that only the prover knows. This secret can be used to ensure that the proof corresponds to an actual execution.
+   - **Random Inputs**: Introduce random, private inputs to the binary execution, which are known only to the prover. The proof should demonstrate that the output corresponds to these private inputs. This randomness ensures that the proof cannot be reused or faked using public knowledge.
+
+#### 2. **Obfuscate Input Requirements**
+   - **Hidden Input Parameters**: Design the proof in such a way that part of the input is not known to the public. For example, use private, unpredictable inputs in the binary execution process, ensuring that only the real execution of the binary can produce the correct output.
+
+#### 3. **Use a Secure Execution Environment**
+   - **Trusted Execution Environment (TEE)**: Run the binary within a TEE, such as Intel SGX, which can securely attest that the binary was executed correctly. The TEE would generate an attestation that proves the correct execution and can be included in the ZKP.
+
+#### 4. **Challenge-Response Mechanism**
+   - **Challenge-Based Proofs**: Implement a challenge-response protocol where the verifier issues a challenge (e.g., a random nonce) that must be incorporated into the binary execution process. The output should depend on the challenge, and the proof must demonstrate that the binary was executed with the correct challenge.
+
+#### 5. **Commitment Schemes**
+   - **Commitment Before Execution**: Use a cryptographic commitment scheme where the prover commits to the binary and inputs before execution. The commitment ensures that the prover cannot alter the binary or inputs after seeing the challenge.
+
+### **Conclusion**
+In an untrusted environment with public knowledge of checksums and hashes, the system as described can be faked by an adversary. To mitigate this risk, you need to incorporate private, unpredictable elements into the proof process or rely on a trusted execution environment. Using methods such as challenge-response mechanisms, trusted setups, or TEEs can help ensure that the proof is tied to an actual execution of the binary, making it infeasible to fake.
